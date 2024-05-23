@@ -124,6 +124,13 @@ class Library:
     def registrar_user(self):
         users = self.load_users()
         if self.user.email in users:
-            return False
+            raise ValueError("Email ya existe")
         else:
             users[self.user.email] = {"nombre": self.user.name, "contraseña": self.user.password}
+
+    def login_user(self):
+        users = self.load_users()
+        if self.user.email in users and users[self.user.email]["contraseña"] == self.user.password:
+            return True
+        else:
+            raise Exception("El usuario ingresado no es correcto")
