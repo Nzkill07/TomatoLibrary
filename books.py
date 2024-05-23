@@ -1,6 +1,9 @@
 import json
 import os
 import datetime
+import requests
+from translate import Translator
+from email_service import reservar_libro as enviar_correo_reserva
 
 BOOKS_FILE = 'books.json'
 RESERVATIONS_FILE = 'reservations.json'
@@ -27,9 +30,9 @@ def save_reservations(reservations):
 
 def show_books():
     books = load_books()
-    print("Libros Disponibles:")
-    for book in books:
-        print(f"- {book['titulo']} (Autor: {book['autor']}, Categoría: {book['categoria']})")
+    print("Libros en la biblioteca:")
+    for idx, book in enumerate(books, start=1):
+        print(f"{idx}. {book['titulo']} (Autor: {book['autor']}, Categoría: {book['categoria']})")
     input("Presione Enter para continuar...")
 
 def search_books():
@@ -60,15 +63,29 @@ def search_books():
 
     if filtered_books:
         print("Resultados de la búsqueda:")
-        for book in filtered_books:
-            print(f"- {book['titulo']} (Autor: {book['autor']}, Categoría: {book['categoria']})")
+        for idx, book in enumerate(filtered_books, start=1):
+            print(f"{idx}. {book['titulo']} (Autor: {book['autor']}, Categoría: {book['categoria']})")
+        seleccion = int(input("Seleccione un libro: "))
+        if 1 <= seleccion <= len(filtered_books):
+            selected_book = filtered_books[seleccion - 1]
+            mostrar_detalle_libro(selected_book)
     else:
         print("No se encontraron libros.")
+    input("Presione Enter para continuar...")
+
+def mostrar_detalle_libro(book):
+    print("Detalles del libro:")
+    print(f"Título: {book['titulo']}")
+    print(f"Autor: {book['autor']}")
+    print(f"Categoría: {book['categoria']}")
+    print(f"Disponible: {'Sí' if book['disponible'] else 'No'}")
+    obtener_resenas_sinopsis(book['isbn'])
     input("Presione Enter para continuar...")
 
 def reserve_book(user_email):
     books = load_books()
     reservations = load_reservations()
+    user_name = user_email.split('@')[0]
 
     if user_email not in reservations:
         reservations[user_email] = []
@@ -87,6 +104,7 @@ def reserve_book(user_email):
                 reservations[user_email].append({'titulo': titulo, 'fecha_reserva': str(datetime.date.today())})
                 save_books(books)
                 save_reservations(reservations)
+                enviar_correo_reserva(titulo, user_name, user_email)
                 print("Libro reservado con éxito.")
                 input("Presione Enter para continuar...")
                 return
@@ -105,3 +123,22 @@ def show_reserved_books(user_email):
     else:
         print("No tiene libros reservados.")
     input("Presione Enter para continuar...")
+
+def obtener_resenas_sinopsis(isbn):
+    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}"
+    response = requests.get(url)
+    data = response.json()
+    traductor = Translator(to_lang="es")
+
+    if 'items' in data:
+        libro = data['items'][0]
+
+        if 'description' in libro['volumeInfo']:
+            sinopsis_ingles = libro['volumeInfo']['description']
+            sinopsis_espanol = ""
+            for i in range(0, len(sinopsis_ingles), 500):
+                parte = sinopsis_ingles[i:i+500]
+                sinopsis_espanol += traductor.translate(parte)
+            print("Sinopsis:", sinopsis_espanol)
+    else:
+        print("Libro no encontrado")

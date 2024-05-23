@@ -2,28 +2,28 @@ from users import register_user, login_user
 from books import show_books, search_books, reserve_book, show_reserved_books
 from utils import clear_screen
 
-def main_menu():
+def main():
     while True:
-        clear_screen()
-        print("Bienvenido a la Biblioteca Virtual")
         print("1. Iniciar Sesión")
         print("2. Registrarse")
         print("3. Salir")
         choice = input("Seleccione una opción: ")
 
         if choice == '1':
-            user_email = login_user()
-            if user_email:
-                library_menu(user_email)
+            email = input("Correo: ")
+            password = input("Contraseña: ")
+            if login_user(email, password):
+                user_menu(email)
+            else:
+                print("Credenciales incorrectas. Inténtelo de nuevo.")
         elif choice == '2':
             register_user()
         elif choice == '3':
             break
         else:
-            print("Opción inválida. Intente de nuevo.")
-            input("Presione Enter para continuar...")
+            print("Opción inválida. Inténtelo de nuevo.")
 
-def library_menu(user_email):
+def user_menu(user_email):
     while True:
         clear_screen()
         print("Menú de Biblioteca")
@@ -45,8 +45,7 @@ def library_menu(user_email):
         elif choice == '5':
             break
         else:
-            print("Opción inválida. Intente de nuevo.")
-            input("Presione Enter para continuar...")
+            print("Opción inválida. Inténtelo de nuevo.")
 
 if __name__ == "__main__":
-    main_menu()
+    main()

@@ -1,16 +1,16 @@
 import json
 import os
 
-DATA_FILE = 'users.json'
+USERS_FILE = 'users.json'
 
 def load_users():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r') as file:
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'r') as file:
             return json.load(file)
     return {}
 
 def save_users(users):
-    with open(DATA_FILE, 'w') as file:
+    with open(USERS_FILE, 'w') as file:
         json.dump(users, file)
 
 def register_user():
@@ -18,31 +18,20 @@ def register_user():
     print("Registro de Usuario")
     nombre = input("Nombre: ")
     correo = input("Correo: ")
-    print(f"Correo ingresado: {correo}")  # Línea de depuración
-    contraseña = input("Contraseña: ")
-    print(f"Contraseña ingresada: {contraseña}")  # Línea de depuración
-
     if correo in users:
-        print("Este correo ya está registrado. Intente iniciar sesión.")
-    else:
-        users[correo] = {'nombre': nombre, 'contraseña': contraseña, 'reservas': []}
-        save_users(users)
-        print("Registro exitoso. Ahora puede iniciar sesión.")
-    input("Presione Enter para continuar...")
-
-def login_user():
-    users = load_users()
-    print("Inicio de Sesión")
-    correo = input("Correo: ")
-    print(f"Correo ingresado: {correo}")  # Línea de depuración
+        print("Este correo ya está registrado.")
+        return
     contraseña = input("Contraseña: ")
-    print(f"Contraseña ingresada: {contraseña}")  # Línea de depuración
 
-    if correo in users and users[correo]['contraseña'] == contraseña:
-        print("Inicio de sesión exitoso.")
-        input("Presione Enter para continuar...")
-        return correo
-    else:
-        print("Correo o contraseña incorrectos.")
-        input("Presione Enter para continuar...")
-        return None
+    users[correo] = {
+        "nombre": nombre,
+        "contraseña": contraseña
+    }
+    save_users(users)
+    print("Usuario registrado con éxito.")
+
+def login_user(email, password):
+    users = load_users()
+    if email in users and users[email]['contraseña'] == password:
+        return True
+    return False

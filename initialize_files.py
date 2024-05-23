@@ -12,8 +12,8 @@ def initialize_files():
 
     if not os.path.exists(books_file):
         books = [
-            {"titulo": "Libro1", "autor": "Autor1", "categoria": "Acción", "disponible": True},
-            {"titulo": "Libro2", "autor": "Autor2", "categoria": "Comedia", "disponible": True}
+            {"titulo": "El Alquimista", "autor": "Paulo Cohelo", "categoria": "Acción", "disponible": True, "isbn": "9504903584"},
+            {"titulo": "Libro2", "autor": "Autor2", "categoria": "Comedia", "disponible": True, "isbn": "0987654321"}
         ]
         with open(books_file, 'w') as file:
             json.dump(books, file)
