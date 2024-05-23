@@ -1,6 +1,7 @@
 import json
 import os
 
+
 def initialize_files():
     users_file = 'users.json'
     books_file = 'books.json'
@@ -21,6 +22,4 @@ def initialize_files():
     if not os.path.exists(reservations_file):
         with open(reservations_file, 'w') as file:
             json.dump({}, file)
-
-if __name__ == "__main__":
-    initialize_files()
+initialize_files()

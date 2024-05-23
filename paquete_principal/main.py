@@ -1,4 +1,4 @@
-from users import register_user, login_user
+from paquete_principal.Modelo.class_user import register_user, login_user
 from paquete_principal.Modelo.Library import show_books, search_books, reserve_book, show_reserved_books
 from utils import clear_screen
 

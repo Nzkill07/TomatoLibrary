@@ -2,6 +2,8 @@ import json
 import os
 import datetime
 
+from paquete_principal.Modelo.class_user import Users
+
 
 class Book:
     def __init__(self, titulo, autor, categoria, disponible):
@@ -12,11 +14,13 @@ class Book:
 
 
 class Library:
-    def __init__(self, books_file='books.json', reservations_file='reservations.json'):
+    def __init__(self, user: Users, books_file='books.json', reservations_file='reservations.json'):
         self.books_file = books_file
         self.reservations_file = reservations_file
         self.books = self.load_books()
         self.reservations = self.load_reservations()
+        self.user: Users = user
+        self.DATA_FILE = 'paquete_principal/Modelo/user.json'
 
     def load_books(self):
         if os.path.exists(self.books_file):
@@ -104,3 +108,22 @@ class Library:
             libros_reservados.append({'titulo': titulo, 'dias_restantes': dias_restantes})
 
         return libros_reservados
+
+    def load_users(self) -> dict:
+        if os.path.exists(self.DATA_FILE):
+            with open(self.DATA_FILE, 'r') as file:
+                return json.load(file)
+        return {}
+
+    def save_users(self, users):
+        with open(self.DATA_FILE, 'w') as file:
+            json.dump(users, file)
+            file.close()
+        return
+
+    def registrar_user(self):
+        users = self.load_users()
+        if self.user.email in users:
+            return False
+        else:
+            users[self.user.email] = {"nombre": self.user.name, "contraseña": self.user.password}
