@@ -1,23 +1,20 @@
-import base64
 import datetime
 import smtplib
-from asyncio import shield
 from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import ClassVar
-
-import bcrypt
 import requests
 from googletrans import Translator
 
 
 class Users:
+    reservations = {}
+
     def __init__(self, name: str, email: str, password: str):
         self.name = name
         self.email = email
         self.password = password
-        self.reservations = []
 
 
 class Book:
@@ -82,35 +79,73 @@ def obtener_resenas_sinopsis(isbn):
         return None
 
 
-def encrypt_password(password):
-    hash_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-    return base64.b64encode(hash_password).decode("utf-8")
-
-
 @dataclass
 class Library:
     disponibles: ClassVar = []
     users: ClassVar = {}
+    books: ClassVar = {}
+    user: Users
 
     def registrar_user(self, user: Users):
         if user.email in self.users:
             raise ValueError("Email ya existe")
         else:
-            self.users[user.email] = {"nombre": user.name, "contraseña": encrypt_password(user.password)}
+            self.users[user.email] = {"nombre": user.name, "contraseña": user.password}
 
     def login_user(self, user: Users):
-        if user.email in self.users and self.verify_password(user):
+        if user.email in self.users and self:
             return True
         else:
             raise ValueError("El usuario ingresado no es correcto")
 
-    def verify_password(self, user: Users):
-        hashed_password_base64 = self.users[user.email]["contraseña"]
-        hashed_password = base64.b64decode(hashed_password_base64.encode('utf-8'))
-        return bcrypt.checkpw(user.password.encode("utf-8"), hashed_password)
+    def show_books(self):
+        libros_disponibles = []
+        for book in self.books:
+            libros_disponibles.append(f"- {book}")
+        return libros_disponibles
 
-    def reservar_libro(self, user: Users, titulo):
+    def search_books(self, criterio_busqueda=None):
+        if criterio_busqueda is None:
+            return self.books
+
+        filtered_books = []
+
+        if isinstance(criterio_busqueda, str):
+            criterio_busqueda = criterio_busqueda.lower()
+            for book in self.books:
+                if book.autor.lower().find(criterio_busqueda) != -1 or \
+                        book.titulo.lower().find(criterio_busqueda) != -1 or \
+                        book.categoria.lower().find(criterio_busqueda) != -1:
+                    filtered_books.append(book)
+        elif isinstance(criterio_busqueda, bool):
+            filtered_books = [book for book in self.books if book.disponible == criterio_busqueda]
+        else:
+            raise TypeError("Criterio de búsqueda no válido")
+
+        return filtered_books
+
+    def reserve_book(self, user_email, titulo):
+        if not isinstance(user_email, str):
+            raise TypeError("Email del usuario no válido")
+        if not isinstance(titulo, str):
+            raise TypeError("Título del libro no válido")
+
+        titulo = titulo.lower()
+
+        for book in self.books:
+            if book.titulo.lower() == titulo and book.disponible:
+                book.disponible = False
+                if user_email not in Users.reservations:
+                    Users.reservations[user_email] = []
+                    Users.reservations[user_email].append(
+                        {'titulo': titulo, 'fecha_reserva': str(datetime.date.today())})
+                return True
+        self.reservar_libro(titulo)
+
+        return False
+
+    def reservar_libro(self, titulo):
         tiempo_devolucion = datetime.datetime.now() + datetime.timedelta(days=7)
-        mensaje = (f"¡Hola {user.name}!\n\nHas reservado el libro '{titulo}'.\n\n"
+        mensaje = (f"¡Hola {self.user.name}!\n\nHas reservado el libro '{titulo}'.\n\n"
                    f"Por favor, devuélvelo antes de: {tiempo_devolucion.strftime('%Y-%m-%d %H:%M:%S')}")
-        enviar_correo(user.email, "Reserva de libro", mensaje)
+        enviar_correo(self.user.email, "Reserva de libro", mensaje)
