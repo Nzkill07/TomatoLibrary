@@ -1,6 +1,7 @@
 import json
 import os
 import datetime
+import bcrypt
 
 from paquete_principal.Modelo.class_user import Users
 
@@ -62,7 +63,6 @@ class Library:
                         book.categoria.lower().find(criterio_busqueda) != -1:
                     filtered_books.append(book)
         elif isinstance(criterio_busqueda, bool):
-            # Búsqueda por disponibilidad
             filtered_books = [book for book in self.books if book.disponible == criterio_busqueda]
         else:
             raise TypeError("Criterio de búsqueda no válido")
@@ -126,11 +126,19 @@ class Library:
         if self.user.email in users:
             raise ValueError("Email ya existe")
         else:
-            users[self.user.email] = {"nombre": self.user.name, "contraseña": self.user.password}
+            users[self.user.email] = {"nombre": self.user.name, "contraseña": self.encrypt_password()}
 
     def login_user(self):
         users = self.load_users()
-        if self.user.email in users and users[self.user.email]["contraseña"] == self.user.password:
+        if self.user.email in users and users[self.user.email]["contraseña"] == self.verify_password():
             return True
         else:
             raise Exception("El usuario ingresado no es correcto")
+
+    def encrypt_password(self):
+        hash_password = bcrypt.hashpw(self.user.password.encode("utf-8"), bcrypt.gensalt())
+        return hash_password
+
+    def verify_password(self):
+        hash_joined = bcrypt.hashpw(self.user.password.encode("utf-8"), self.encrypt_password())
+        return hash_joined
