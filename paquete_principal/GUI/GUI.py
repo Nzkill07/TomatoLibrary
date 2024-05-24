@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from paquete_principal.Modelo.Library import Library, Users
 
+
 class LibraryApp:
     def __init__(self, root):
         self.root = root
@@ -44,6 +45,7 @@ class LibraryApp:
     def open_register_window(self):
         register_window = tk.Toplevel()
         register_window.title("Registrar Usuario")
+        register_window.geometry("400x400")
 
         # Campos de entrada para registro
         name_label = tk.Label(register_window, text="Nombre:")
@@ -67,25 +69,62 @@ class LibraryApp:
         confirm_password_entry.grid(row=3, column=1)
 
         # Botón de registro
-        register_button = tk.Button(register_window, text="Registrar usuario", command=lambda: self.register_user(name_entry.get(), email_entry.get(), password_entry.get(), confirm_password_entry.get()))
+        register_button = tk.Button(register_window, text="Registrar usuario",command=lambda: self.register_user(name_entry.get(), email_entry.get(),password_entry.get(), confirm_password_entry.get()))
         register_button.grid(row=4, columnspan=2, pady=10)
 
     def open_library_window(self):
         library_window = tk.Toplevel()
         library_window.title("Biblioteca")
+        library_window.geometry("400x400")
+        label_window = tk.Label(library_window, text="Busqueda de libros", font=("Helvetica", 16))
+        label_window.pack(pady=10)
 
         # Crear lista desplegable para los filtros de libros
         filters_label = tk.Label(library_window, text="Filtros de libros:")
         filters_label.pack()
 
-        filters = ["Autor", "Título", "Categoría"]
+        filters = ["Autor", "Título", "Disponibles", "Categorias"]
         filter_var = tk.StringVar()
         filter_dropdown = ttk.Combobox(library_window, textvariable=filter_var, values=filters)
         filter_dropdown.pack()
 
-        # Botón para seleccionar libros
-        select_books_button = tk.Button(library_window, text="Seleccionar Libros")
+        def select_filter():
+            selected_filter = filter_dropdown.get()
+            messagebox.showinfo("Filtro", f"El filtro aplicado es {selected_filter}")
+            self.open_another_window(selected_filter)
+
+        # Botón para seleccionar filtro
+        select_books_button = tk.Button(library_window, text="Seleccionar filtro", command=select_filter)
         select_books_button.pack(pady=10)
+
+    @staticmethod
+    def open_another_window(title):
+        another_window = tk.Toplevel()
+        another_window.title(title)
+        another_window.geometry("400x400")
+
+        # Crear otro menú desplegable
+        options_label = tk.Label(another_window, text="Opciones")
+        options_label.pack()
+        options = ""
+        if title == "Categorias":
+            options = ["Comedia", "Romance", "Accion", "Terror", "Sobrenatural"]
+        elif title == "titulo":
+            options = []
+        elif title == "Disponibilidad":
+            options = Library.disponibles
+        option_var = tk.StringVar()
+        option_dropdown = ttk.Combobox(another_window, textvariable=option_var, values=options)
+        option_dropdown.pack()
+
+        # Función para manejar la selección de opción
+        def select_option():
+            selected_option = option_dropdown.get()
+            messagebox.showinfo(title, f"Usted selecciono {selected_option}")
+
+        # Botón para seleccionar opción
+        select_option_button = tk.Button(another_window, text="Seleccionar opción", command=select_option)
+        select_option_button.pack(pady=10)
 
     def register_user(self, name, email, password, confirm_password):
         if password != confirm_password:
@@ -118,5 +157,6 @@ class LibraryApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.geometry("400x400")
     app = LibraryApp(root)
     root.mainloop()

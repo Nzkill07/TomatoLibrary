@@ -1,8 +1,12 @@
 import base64
 import datetime
 import smtplib
+from asyncio import shield
+from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import ClassVar
+
 import bcrypt
 import requests
 from googletrans import Translator
@@ -83,20 +87,16 @@ def encrypt_password(password):
     return base64.b64encode(hash_password).decode("utf-8")
 
 
+@dataclass
 class Library:
-    def __init__(self):
-        self.users = {}
-
-    def save_users(self):
-        # Aquí puedes guardar usuarios en cualquier fuente de datos
-        pass
+    disponibles: ClassVar = []
+    users: ClassVar = {}
 
     def registrar_user(self, user: Users):
         if user.email in self.users:
             raise ValueError("Email ya existe")
         else:
             self.users[user.email] = {"nombre": user.name, "contraseña": encrypt_password(user.password)}
-            self.save_users()
 
     def login_user(self, user: Users):
         if user.email in self.users and self.verify_password(user):
