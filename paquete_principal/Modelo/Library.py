@@ -83,7 +83,19 @@ def obtener_resenas_sinopsis(isbn):
 class Library:
     disponibles: ClassVar = []
     users: ClassVar = {}
-    books: ClassVar = {}
+    books: ClassVar = [{"title": "Cien años de soledad", "autor": "Gabriel garcia marquez", "categoria": "Romance", "disponible": True},
+    {"title": "El señor de los anillos", "autor": "J R R Tolkien", "categoria": "Sobrenatural", "disponible": True},
+    {"title": "Orgullo y prejuicio", "autor": " jane austen", "categoria": "Romance" , "disponible": True},
+    {"title": "Don quijote de la mancha", "autor": "miguel de cervantes" , "categoria": "Comedia", "disponible": True},
+    {"title": "Hamlet", "autor": "william   Shakespeare", "categoria": "Romance", "disponible": True},
+    {"title": "La odisea", "autor": "homero", "categoria": "Sobrenatural", "disponible": True},
+    {"title": "Caperucita roja", "autor": "Charles Perrault", "categoria": "Fantasia", "disponible": True},
+    {"title": "Drácula", "autor": "Bram Stoker", "categoria": "Terror", "disponible": True},
+    {"title": "En las montañas de la locura", "autor": "Howard Phillips Lovecraft", "categoria": "Terror", "disponible": True}]
+
+
+
+
     user: Users = None
 
     def registrar_user(self, user: Users):

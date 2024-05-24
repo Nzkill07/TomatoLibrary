@@ -134,8 +134,8 @@ class LibraryApp:
                 messagebox.showinfo(title, f"Usted selecciono {selected_option}")
             else:
                 resultados_var = tk.StringVar()
-                resultados = ["categoria": selected_option]
-                filter_dropdown = ttk.Combobox(another_window, textvariable=resultados_var, values=resultados)
+                resultados = {Library.books["title"] for Library.books in Library.books if Library.books["categoria"] == resultados_var.get()}
+                filter_dropdown = ttk.Combobox(another_window, textvariable=resultados_var, values=list(resultados))
                 filter_dropdown.pack()
 
         # Botón para seleccionar opción
