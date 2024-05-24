@@ -1,9 +1,19 @@
-import json
-import os
+import base64
 import datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import bcrypt
+import requests
+from googletrans import Translator
 
-from paquete_principal.Modelo.class_user import Users
+
+class Users:
+    def __init__(self, name: str, email: str, password: str):
+        self.name = name
+        self.email = email
+        self.password = password
+        self.reservations = []
 
 
 class Book:
@@ -14,131 +24,93 @@ class Book:
         self.disponible = disponible
 
 
-class Library:
-    def __init__(self, user: Users, books_file='books.json', reservations_file='reservations.json'):
-        self.books_file = books_file
-        self.reservations_file = reservations_file
-        self.books = self.load_books()
-        self.reservations = self.load_reservations()
-        self.user: Users = user
-        self.DATA_FILE = 'paquete_principal/Modelo/user.json'
+def translate_to_spanish(text):
+    traductor = Translator()
+    translated_text = traductor.translate(text)
+    return translated_text.text
 
-    def load_books(self):
-        if os.path.exists(self.books_file):
-            with open(self.books_file, 'r') as file:
-                return [Book(**book_dict) for book_dict in json.load(file)]
-        return []
 
-    def save_books(self):
-        with open(self.books_file, 'w') as file:
-            json.dump([book.__dict__ for book in self.books], file)
+def enviar_correo(destinatario, asunto, mensaje):
+    servidor_smtp = 'smtp.gmail.com'
+    puerto_smtp = 587
+    remitente = 'tomatolibraryeduco@gmail.com'
+    admin_password = 'ngjq zhsg zbhn clso'
 
-    def load_reservations(self):
-        if os.path.exists(self.reservations_file):
-            with open(self.reservations_file, 'r') as file:
-                return json.load(file)
-        return {}
+    msg = MIMEMultipart()
+    msg['From'] = remitente
+    msg['To'] = destinatario
+    msg['Subject'] = asunto
 
-    def save_reservations(self):
-        with open(self.reservations_file, 'w') as file:
-            json.dump(self.reservations, file)
+    msg.attach(MIMEText(mensaje, 'plain'))
 
-    def show_books(self):
-        libros_disponibles = []
-        for book in self.books:
-            libros_disponibles.append(f"- {book}")
-        return libros_disponibles
+    servidor = smtplib.SMTP(host=servidor_smtp, port=puerto_smtp)
+    servidor.starttls()
+    servidor.login(remitente, admin_password)
 
-    def search_books(self, criterio_busqueda=None):
-        if criterio_busqueda is None:
-            return self.books
+    servidor.send_message(msg)
+    servidor.quit()
 
-        filtered_books = []
 
-        if isinstance(criterio_busqueda, str):
-            criterio_busqueda = criterio_busqueda.lower()
-            for book in self.books:
-                if book.autor.lower().find(criterio_busqueda) != -1 or \
-                        book.titulo.lower().find(criterio_busqueda) != -1 or \
-                        book.categoria.lower().find(criterio_busqueda) != -1:
-                    filtered_books.append(book)
-        elif isinstance(criterio_busqueda, bool):
-            filtered_books = [book for book in self.books if book.disponible == criterio_busqueda]
+def obtener_resenas_sinopsis(isbn):
+    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if 'items' in data:
+            libro = data['items'][0]
+            if 'description' in libro['volumeInfo']:
+                sinopsis_ingles = libro['volumeInfo']['description']
+                sinopsis_espanol = translate_to_spanish(sinopsis_ingles)
+
+                # Return the translated synopsis instead of printing it
+                return sinopsis_espanol
+
+            else:
+                # Handle the case where there's no description
+                return None
+
         else:
-            raise TypeError("Criterio de búsqueda no válido")
+            # Handle the case where no items are found
+            return None
 
-        return filtered_books
+    else:
+        # Handle HTTP errors
+        return None
 
-    def reserve_book(self, user_email, titulo):
-        if not isinstance(user_email, str):
-            raise TypeError("Email del usuario no válido")
-        if not isinstance(titulo, str):
-            raise TypeError("Título del libro no válido")
 
-        titulo = titulo.lower()
+def encrypt_password(password):
+    hash_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    return base64.b64encode(hash_password).decode("utf-8")
 
-        for book in self.books:
-            if book.titulo.lower() == titulo and book.disponible:
-                book.disponible = False
-                self.save_books()
 
-                if user_email not in self.reservations:
-                    self.reservations[user_email] = []
-                self.reservations[user_email].append({'titulo': titulo, 'fecha_reserva': str(datetime.date.today())})
-                self.save_reservations()
+class Library:
+    def __init__(self):
+        self.users = {}
 
-                return True
+    def save_users(self):
+        # Aquí puedes guardar usuarios en cualquier fuente de datos
+        pass
 
-        return False
-
-    def show_reserved_books(self, user_email):
-        if not isinstance(user_email, str):
-            raise TypeError("Email del usuario no válido")
-
-        if user_email not in self.reservations:
-            return []
-
-        reservas = self.reservations[user_email]
-        libros_reservados = []
-
-        for reserva in reservas:
-            titulo = reserva['titulo']
-            fecha_reserva = datetime.date.fromisoformat(reserva['fecha_reserva'])
-            dias_restantes = (fecha_reserva + datetime.timedelta(days=7) - datetime.date.today()).days
-            libros_reservados.append({'titulo': titulo, 'dias_restantes': dias_restantes})
-
-        return libros_reservados
-
-    def load_users(self) -> dict:
-        if os.path.exists(self.DATA_FILE):
-            with open(self.DATA_FILE, 'r') as file:
-                return json.load(file)
-        return {}
-
-    def save_users(self, users):
-        with open(self.DATA_FILE, 'w') as file:
-            json.dump(users, file)
-            file.close()
-        return
-
-    def registrar_user(self):
-        users = self.load_users()
-        if self.user.email in users:
+    def registrar_user(self, user: Users):
+        if user.email in self.users:
             raise ValueError("Email ya existe")
         else:
-            users[self.user.email] = {"nombre": self.user.name, "contraseña": self.encrypt_password()}
+            self.users[user.email] = {"nombre": user.name, "contraseña": encrypt_password(user.password)}
+            self.save_users()
 
-    def login_user(self):
-        users = self.load_users()
-        if self.user.email in users and users[self.user.email]["contraseña"] == self.verify_password():
+    def login_user(self, user: Users):
+        if user.email in self.users and self.verify_password(user):
             return True
         else:
-            raise Exception("El usuario ingresado no es correcto")
+            raise ValueError("El usuario ingresado no es correcto")
 
-    def encrypt_password(self):
-        hash_password = bcrypt.hashpw(self.user.password.encode("utf-8"), bcrypt.gensalt())
-        return hash_password
+    def verify_password(self, user: Users):
+        hashed_password_base64 = self.users[user.email]["contraseña"]
+        hashed_password = base64.b64decode(hashed_password_base64.encode('utf-8'))
+        return bcrypt.checkpw(user.password.encode("utf-8"), hashed_password)
 
-    def verify_password(self):
-        hash_joined = bcrypt.hashpw(self.user.password.encode("utf-8"), self.encrypt_password())
-        return hash_joined
+    def reservar_libro(self, user: Users, titulo):
+        tiempo_devolucion = datetime.datetime.now() + datetime.timedelta(days=7)
+        mensaje = (f"¡Hola {user.name}!\n\nHas reservado el libro '{titulo}'.\n\n"
+                   f"Por favor, devuélvelo antes de: {tiempo_devolucion.strftime('%Y-%m-%d %H:%M:%S')}")
+        enviar_correo(user.email, "Reserva de libro", mensaje)

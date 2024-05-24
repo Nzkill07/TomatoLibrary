@@ -1,72 +1,122 @@
 import tkinter as tk
+from tkinter import messagebox, ttk
+from paquete_principal.Modelo.Library import Library, Users
 
-# Function to open login window
-def open_login_window():
-    # Create login window
-    login_window = tk.Toplevel(root)
-    login_window.title("Biblioteca - Iniciar Sesión")
+class LibraryApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Biblioteca")
 
-    # Create the login_label variable and assign a value
-    login_label = tk.Label(login_window, text="Iniciar Sesión")
+        # Crear una instancia de la clase Library
+        self.library = Library()
 
-    # Login section widgets with labels
-    username_label = tk.Label(login_window, text="Nombre de Usuario:")
-    username_entry = tk.Entry(login_window)
-    password_label = tk.Label(login_window, text="Contraseña:")
-    password_entry = tk.Entry(login_window, show="*")
-    login_button = tk.Button(login_window, text="Iniciar Sesión")
+        # Variables de control para los campos de entrada
+        self.email_var = tk.StringVar()
+        self.password_var = tk.StringVar()
 
-    # Grid layout for login section widgets
-    login_label.grid(row=0, column=0, sticky=tk.W)
-    username_label.grid(row=1, column=0, sticky=tk.W)
-    username_entry.grid(row=1, column=1, padx=5)
-    password_label.grid(row=2, column=0, sticky=tk.W)
-    password_entry.grid(row=2, column=1, padx=5)
-    login_button.grid(row=3, column=0, columnspan=2, pady=10)
+        # Configuración de la ventana principal
+        self.setup_main_window()
 
-    # Login window loop
-    login_window.mainloop()
+    def setup_main_window(self):
+        # Etiqueta de bienvenida
+        welcome_label = tk.Label(self.root, text="Bienvenido a la Biblioteca", font=("Helvetica", 16))
+        welcome_label.pack(pady=10)
 
-# Function to open register window
-def open_register_window():
-    # Create register window
-    register_window = tk.Toplevel(root)
-    register_window.title("Biblioteca - Registro")
+        # Campos de entrada para inicio de sesión
+        email_label = tk.Label(self.root, text="Correo electrónico:")
+        email_label.pack()
+        email_entry = tk.Entry(self.root, textvariable=self.email_var)
+        email_entry.pack()
 
-    # Register section widgets
-    name_label = tk.Label(register_window, text="Nombre de Usuario:")
-    name_entry = tk.Entry(register_window)
-    email_label = tk.Label(register_window, text="Correo electrónico:")
-    email_entry = tk.Entry(register_window)
-    password_label = tk.Label(register_window, text="Contraseña:")
-    register_password_entry = tk.Entry(register_window, show="*")
-    register_button = tk.Button(register_window, text="Registrarse")
+        password_label = tk.Label(self.root, text="Contraseña:")
+        password_label.pack()
+        password_entry = tk.Entry(self.root, textvariable=self.password_var, show="*")
+        password_entry.pack()
 
-    # Grid layout for register section widgets
-    name_label.grid(row=0, column=0, sticky=tk.W)
-    name_entry.grid(row=0, column=1, padx=5)
-    email_label.grid(row=1, column=0, sticky=tk.W)
-    email_entry.grid(row=1, column=1, padx=5)
-    password_label.grid(row=2, column=0, sticky=tk.W)
-    register_password_entry.grid(row=2, column=1, padx=5)
-    register_button.grid(row=3, column=0, columnspan=2, pady=10)
+        # Botón de inicio de sesión
+        login_button = tk.Button(self.root, text="Iniciar Sesión", command=self.login)
+        login_button.pack(pady=5)
 
-    # Register window loop
-    register_window.mainloop()
+        # Botón para registrar usuario
+        register_button = tk.Button(self.root, text="Registrarse", command=self.open_register_window)
+        register_button.pack()
 
-# Main window (root)
-root = tk.Tk()
-root.title("Biblioteca - Principal")
+    def open_register_window(self):
+        register_window = tk.Toplevel()
+        register_window.title("Registrar Usuario")
 
-# Login button
-login_button = tk.Button(root, text="Iniciar Sesión", command=open_login_window)
-login_button.pack(pady=10)
+        # Campos de entrada para registro
+        name_label = tk.Label(register_window, text="Nombre:")
+        name_label.grid(row=0, column=0)
+        name_entry = tk.Entry(register_window)
+        name_entry.grid(row=0, column=1)
 
-# Register button
-register_button = tk.Button(root, text="Registrarse", command=open_register_window)
-register_button.pack(pady=10)
+        email_label = tk.Label(register_window, text="Correo electrónico:")
+        email_label.grid(row=1, column=0)
+        email_entry = tk.Entry(register_window)
+        email_entry.grid(row=1, column=1)
 
-# Rest of your code for buttons (show_books, etc.) goes here
+        password_label = tk.Label(register_window, text="Contraseña:")
+        password_label.grid(row=2, column=0)
+        password_entry = tk.Entry(register_window, show="*")
+        password_entry.grid(row=2, column=1)
 
-# Start the main window loop
-root.mainloop()
+        confirm_password_label = tk.Label(register_window, text="Confirmar contraseña:")
+        confirm_password_label.grid(row=3, column=0)
+        confirm_password_entry = tk.Entry(register_window, show="*")
+        confirm_password_entry.grid(row=3, column=1)
+
+        # Botón de registro
+        register_button = tk.Button(register_window, text="Registrar usuario", command=lambda: self.register_user(name_entry.get(), email_entry.get(), password_entry.get(), confirm_password_entry.get()))
+        register_button.grid(row=4, columnspan=2, pady=10)
+
+    def open_library_window(self):
+        library_window = tk.Toplevel()
+        library_window.title("Biblioteca")
+
+        # Crear lista desplegable para los filtros de libros
+        filters_label = tk.Label(library_window, text="Filtros de libros:")
+        filters_label.pack()
+
+        filters = ["Autor", "Título", "Categoría"]
+        filter_var = tk.StringVar()
+        filter_dropdown = ttk.Combobox(library_window, textvariable=filter_var, values=filters)
+        filter_dropdown.pack()
+
+        # Botón para seleccionar libros
+        select_books_button = tk.Button(library_window, text="Seleccionar Libros")
+        select_books_button.pack(pady=10)
+
+    def register_user(self, name, email, password, confirm_password):
+        if password != confirm_password:
+            messagebox.showerror("Error", "Las contraseñas no coinciden")
+            return
+
+        try:
+            usuario = Users(name, email, password)
+            self.library.registrar_user(usuario)
+            messagebox.showinfo("Registro", "Usuario registrado exitosamente")
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
+
+    def login(self):
+        email = self.email_var.get()
+        password = self.password_var.get()
+        usuario = Users("", email, password)
+        try:
+            if self.library.login_user(usuario):
+                messagebox.showinfo("Inicio de sesión", "Inicio de sesión exitoso")
+                # Abre la ventana de la biblioteca después de iniciar sesión
+                self.open_library_window()
+                # Oculta la ventana principal en lugar de destruirla
+                self.root.withdraw()
+            else:
+                messagebox.showerror("Inicio de sesión", "Error: Correo electrónico o contraseña incorrectos")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = LibraryApp(root)
+    root.mainloop()
