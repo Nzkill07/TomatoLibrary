@@ -134,7 +134,7 @@ class LibraryApp:
                 messagebox.showinfo(title, f"Usted selecciono {selected_option}")
             else:
                 resultados_var = tk.StringVar()
-                resultados = ["categoria": i for i in ]
+                resultados = ["categoria": selected_option]
                 filter_dropdown = ttk.Combobox(another_window, textvariable=resultados_var, values=resultados)
                 filter_dropdown.pack()
 
