@@ -1,5 +1,6 @@
 import json
 import os
+import bcrypt
 
 USERS_FILE = 'users.json'
 
@@ -22,16 +23,17 @@ def register_user():
         print("Este correo ya está registrado.")
         return
     contraseña = input("Contraseña: ")
+    hashed_contraseña = bcrypt.hashpw(contraseña.encode('utf-8'), bcrypt.gensalt())
 
     users[correo] = {
         "nombre": nombre,
-        "contraseña": contraseña
+        "contraseña": hashed_contraseña.decode('utf-8')
     }
     save_users(users)
     print("Usuario registrado con éxito.")
 
 def login_user(email, password):
     users = load_users()
-    if email in users and users[email]['contraseña'] == password:
+    if email in users and bcrypt.checkpw(password.encode('utf-8'), users[email]['contraseña'].encode('utf-8')):
         return True
     return False

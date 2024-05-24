@@ -1,1 +1,1 @@
-[{"titulo": "El Alquimista", "autor": "Paulo Cohelo", "categoria": "Acci\u00f3n", "disponible": false, "isbn": "9504903584"}, {"titulo": "Libro2", "autor": "Autor2", "categoria": "Comedia", "disponible": true, "isbn": "0987654321"}]
+[{"titulo": "El Alquimista", "autor": "Paulo Cohelo", "categoria": "Acci\u00f3n", "disponible": true, "isbn": "9504903584"}, {"titulo": "Libro2", "autor": "Autor2", "categoria": "Comedia", "disponible": false, "isbn": "0987654321"}]
