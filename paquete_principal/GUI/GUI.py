@@ -96,6 +96,15 @@ class LibraryApp:
         # Botón para seleccionar filtro
         select_books_button = tk.Button(library_window, text="Seleccionar filtro", command=select_filter)
         select_books_button.pack(pady=10)
+        libros_resrvados = tk.StringVar()
+
+        label_libros_reservados = tk.Label(library_window, text="Mis libros reservados", font=("Helvetica", 16))
+        label_libros_reservados.pack(pady=10)
+
+        libros_reservados_dropdown = ttk.Combobox(library_window, textvariable=libros_resrvados, values=Users.reservations)
+        libros_reservados_dropdown.pack()
+
+
 
     @staticmethod
     def open_another_window(title):
@@ -117,10 +126,17 @@ class LibraryApp:
         option_dropdown = ttk.Combobox(another_window, textvariable=option_var, values=options)
         option_dropdown.pack()
 
+
         # Función para manejar la selección de opción
         def select_option():
             selected_option = option_dropdown.get()
-            messagebox.showinfo(title, f"Usted selecciono {selected_option}")
+            if selected_option != "Comedia" and selected_option != "Romance" and selected_option != "Accion":
+                messagebox.showinfo(title, f"Usted selecciono {selected_option}")
+            else:
+                resultados_var = tk.StringVar()
+                resultados = ["categoria": i for i in ]
+                filter_dropdown = ttk.Combobox(another_window, textvariable=resultados_var, values=resultados)
+                filter_dropdown.pack()
 
         # Botón para seleccionar opción
         select_option_button = tk.Button(another_window, text="Seleccionar opción", command=select_option)

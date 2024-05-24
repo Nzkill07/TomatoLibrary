@@ -84,7 +84,7 @@ class Library:
     disponibles: ClassVar = []
     users: ClassVar = {}
     books: ClassVar = {}
-    user: Users
+    user: Users = None
 
     def registrar_user(self, user: Users):
         if user.email in self.users:
